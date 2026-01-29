@@ -36,6 +36,8 @@ from decimal import *
 
 class MonteCarloRange():
     def __init__(self, min: Decimal = Decimal(0.00), probable: Decimal = Decimal(0.00), max: Decimal = Decimal(0.00)):
+        if not (max == min) and ((probable < min) or (probable > max) or (min > max)):
+            raise ValueError
         self.max = Decimal(max)
         self.min = Decimal(min)
         self.probable = Decimal(probable)
@@ -70,6 +72,7 @@ class MonteCarloRange():
             probable = Decimal(self.probable) * Decimal(other)
         result = MonteCarloRange(min=Decimal(min), probable=Decimal(probable), max=Decimal(max))
         return result
+
     @classmethod
     def from_dict(cls, values:dict=None):
         if isinstance(values, dict):

@@ -11,6 +11,5 @@ class TestQuantitativeRisk(unittest.TestCase):
         for s in ["threat_event_frequency","vulnerability","loss_event_frequency","loss_magnitude","annual_loss_expectancy","budget","currency"]:
             self.assertIn(s, risk.to_dict())
 
-
 if __name__ == '__main__':
     unittest.main()
