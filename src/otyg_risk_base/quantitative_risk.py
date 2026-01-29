@@ -31,16 +31,16 @@
 
 from decimal import *
 
-from riskBase.src.montecarlo import MonteCarloRange, MonteCarloSimulation
+from .montecarlo import MonteCarloRange, MonteCarloSimulation
 
 
-class Risk():
+class QuantitativeRisk():
     def __init__(self, values: dict = None):
         if not values:
             self.threat_event_frequency = MonteCarloRange(probable=Decimal(0.5))
             self.vuln_score = MonteCarloRange(probable=Decimal(0.1))
             self.loss_magnitude = MonteCarloSimulation(MonteCarloRange(probable=Decimal(0.001)))
-            self.budget: Decimal=Decimal(1000000),
+            self.budget: Decimal=Decimal(1000000)
             self.currency: str="SEK"
         else:
             self.threat_event_frequency = MonteCarloRange.from_dict(values['threat_event_frequency'])
@@ -48,15 +48,11 @@ class Risk():
             self.loss_magnitude = MonteCarloSimulation(MonteCarloRange.from_dict(values['loss_magnitude']))
             self.budget = Decimal(values['budget'])
             self.currency = values['currency']
-            self.loss_event_frequency = MonteCarloSimulation(MonteCarloRange(min=self.threat_event_frequency.min*self.vuln_score.min,
-                                                        max=self.threat_event_frequency.max*self.vuln_score.max,
-                                                        probable=self.threat_event_frequency.probable*self.vuln_score.probable))
-            self.update_ale()
+        self.loss_event_frequency = MonteCarloSimulation(self.threat_event_frequency.multiply(self.vuln_score))
+        self.update_ale()
     
     def update_ale(self):
-        self.ale = MonteCarloRange(min=self.budget*self.loss_event_frequency.min*self.loss_magnitude.min,
-                                   max=self.budget*self.loss_event_frequency.max*self.loss_magnitude.max,
-                                   probable=self.budget*self.loss_event_frequency.probable*self.loss_magnitude.probable)
+        self.ale = self.loss_event_frequency.multiply(self.loss_magnitude).multiply(self.budget)
         self.annual_loss_expectancy = MonteCarloSimulation(self.ale)
 
     def to_dict(self):
