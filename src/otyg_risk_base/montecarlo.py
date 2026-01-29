@@ -54,12 +54,16 @@ class MonteCarloRange():
             "max": float(self.max)
         }
     
-    def add(self, other = None):
-        max = self.max + other.max
-        min = self.min + other.min
-        probable = self.probable + other.probable
-        result = MonteCarloRange(min=Decimal(min), probable=Decimal(probable), max=Decimal(max))
-        return result
+    def add(self, other):
+        if isinstance(other, MonteCarloRange):
+            max = self.max + other.max
+            min = self.min + other.min
+            probable = self.probable + other.probable
+        else:
+            max = self.max + Decimal(other)
+            min = self.min + Decimal(other)
+            probable = self.probable + Decimal(other)
+        return MonteCarloRange(min=Decimal(min), probable=Decimal(probable), max=Decimal(max))
 
     def multiply(self, other = None):
         if isinstance(other, MonteCarloRange):
@@ -70,8 +74,7 @@ class MonteCarloRange():
             max = Decimal(self.max) * Decimal(other)
             min = Decimal(self.min) * Decimal(other)
             probable = Decimal(self.probable) * Decimal(other)
-        result = MonteCarloRange(min=Decimal(min), probable=Decimal(probable), max=Decimal(max))
-        return result
+        return MonteCarloRange(min=Decimal(min), probable=Decimal(probable), max=Decimal(max))
 
     @classmethod
     def from_dict(cls, values:dict=None):
@@ -82,6 +85,16 @@ class MonteCarloRange():
 
     def __repr__(self):
         return str(self.to_dict())
+    
+    def __hash__(self):
+        return hash(("MonteCarloRange", self.max, self.min, self.probable))
+    
+    def __eq__(self, value):
+        if not isinstance(value, MonteCarloRange) or value == None:
+            return False
+        elif self.__hash__() == value.__hash__():
+            return True
+        return False
 
 class PertDistribution():
     def __init__(self,range: MonteCarloRange):
