@@ -95,6 +95,9 @@ class MonteCarloRange():
         elif self.__hash__() == value.__hash__():
             return True
         return False
+    
+    def __ne__(self, value):
+        return not self.__eq__(value)
 
 class PertDistribution():
     def __init__(self,range: MonteCarloRange):

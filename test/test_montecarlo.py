@@ -33,6 +33,16 @@ class TestMonteCarloRange(unittest.TestCase):
         self.assertTrue(actual_scalar == expected_scalar)
         self.assertFalse(actual == not_expected)
 
+    def test_serialization_and_deserialization(self):
+        original = MonteCarloRange(min= 1, probable=3, max=5)
+        org_dict = original.to_dict()
+        copy = MonteCarloRange.from_dict(org_dict)
+        self.assertEqual(original, copy)
+        self.assertNotEqual(original, MonteCarloRange.from_dict({
+            "min": 1,
+            "probable": 3,
+            "max": 10
+        }))
         
 
 if __name__ == '__main__':
