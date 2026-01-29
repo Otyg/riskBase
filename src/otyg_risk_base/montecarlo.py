@@ -30,7 +30,6 @@
 #
 
 import numpy as np
-import statistics
 from decimal import *
 
 

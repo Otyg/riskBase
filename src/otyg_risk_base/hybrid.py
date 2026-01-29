@@ -33,7 +33,7 @@
 
 from .quantitative_risk import QuantitativeRisk
 
-class DiscreetThreshold():
+class QuantitativeToQualitativeMappingThresholds():
     DEFAULT_PROBABILITY = [
                          {'value':1, 'text':'Mycket låg', 'threshold': 0.1},
                          {'value':2, 'text':'Låg', 'threshold': 0.5},
@@ -76,16 +76,16 @@ class HybridRisk(QuantitativeRisk):
         else:
             super()
         if not values or 'thresholds' not in values:
-            self.thresholds = DiscreetThreshold()
-        elif isinstance(values.get('thresholds'), DiscreetThreshold):
+            self.thresholds = QuantitativeToQualitativeMappingThresholds()
+        elif isinstance(values.get('thresholds'), QuantitativeToQualitativeMappingThresholds):
             self.thresholds = values.get('thresholds')
         else:
-            self.thresholds = DiscreetThreshold(thresholds=values.get('thresholds'))
+            self.thresholds = QuantitativeToQualitativeMappingThresholds(thresholds=values.get('thresholds'))
         
         self.risk = {
-            'probability': values.get('probability', self.calculate_probability()),
-            'consequence': values.get('consequence', self.calculate_consequence()),
-            'risk': values.get('risk', self.calculate_risk())}
+            'probability': values.get('probability') if values else self.calculate_probability(),
+            'consequence': values.get('consequence') if values else self.calculate_consequence(),
+            'risk': values.get('risk') if values else self.calculate_risk()}
     
     def get(self):
         return self.risk.copy()
@@ -123,9 +123,16 @@ class HybridRisk(QuantitativeRisk):
         me.update(self.risk)
         me.update({"thresholds": self.thresholds.to_dict()})
         return me
-
+    
+    def __hash__(self):
+        return hash((super().__hash__(), str(self.risk), str(self.thresholds.to_dict())))
+    
+    def __eq__(self, other):
+        if isinstance(other, HybridRisk):
+            return self.__hash__() == other.__hash__() 
+    
     def __repr__(self):
         return str(self.to_dict())
-    
+
     def __str__(self):
         return f"Sannolikhet: {str(self.risk['probability'])} ({self.risk['probability_text']})\nKonsekvens: {str(self.risk['consequence'])} ({self.risk['consequence_text']})\nRisk: {str(self.risk['risk'])} ({self.risk['risk_text']})"

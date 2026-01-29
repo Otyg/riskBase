@@ -92,7 +92,10 @@ class QuantitativeRisk():
     
     def __eq__(self, other):
         if isinstance(other, QuantitativeRisk):
-            return self.threat_event_frequency == other.threat_event_frequency  and self.vuln_score == other.vuln_score and self.loss_event_frequency == other.loss_event_frequency and self.loss_magnitude == other.loss_magnitude and self.ale == other.ale and self.annual_loss_expectancy == other.annual_loss_expectancy and self.budget == other.budget and self.currency == other.currency
+            return self.__hash__() == other.__hash__()
         return False
+    
+    def __hash__(self):
+        return hash((self.threat_event_frequency, self.vuln_score, self.loss_event_frequency, self.loss_magnitude, self.ale, self.annual_loss_expectancy, self.budget, self.currency))
     def __str__(self):
         return str("ALE (p90): " + str(round(self.annual_loss_expectancy.p90, 2)) + f" {self.currency}/år\nALE (p50): " + str(round(self.annual_loss_expectancy.probable, 2)) + f" {self.currency}/år\n")
