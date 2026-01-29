@@ -31,7 +31,7 @@
 
 
 
-from riskBase.src.quantitative_risk import Risk
+from .quantitative_risk import QuantitativeRisk
 
 class DiscreetThreshold():
     DEFAULT_PROBABILITY = [
@@ -69,7 +69,7 @@ class DiscreetThreshold():
             "risk": self.risk_values
         }
 
-class HybridRisk(Risk):
+class HybridRisk(QuantitativeRisk):
     def __init__(self, values:dict=None):
         if values:
             super().__init__(values=values)
