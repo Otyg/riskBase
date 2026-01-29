@@ -59,6 +59,17 @@ class MonteCarloRange():
         result = MonteCarloRange(min=Decimal(min), probable=Decimal(probable), max=Decimal(max))
         return result
 
+    def multiply(self, other = None):
+        if isinstance(other, MonteCarloRange):
+            max = self.max * other.max
+            min = self.min * other.min
+            probable = self.probable * other.probable
+        else:
+            max = Decimal(self.max) * Decimal(other)
+            min = Decimal(self.min) * Decimal(other)
+            probable = Decimal(self.probable) * Decimal(other)
+        result = MonteCarloRange(min=Decimal(min), probable=Decimal(probable), max=Decimal(max))
+        return result
     @classmethod
     def from_dict(cls, values:dict=None):
         if isinstance(values, dict):
@@ -118,6 +129,16 @@ class MonteCarloSimulation():
             range = MonteCarloRange.from_dict(dict)
             return MonteCarloSimulation(range=range)
         
+    def multiply(self, other=None) -> MonteCarloRange:
+        if isinstance(other, MonteCarloSimulation):
+            max = self.max * other.max
+            min = self.min * other.min
+            probable = self.probable * other.probable
+        else:
+            max = Decimal(self.max) * Decimal(other)
+            min = Decimal(self.min) * Decimal(other)
+            probable = Decimal(self.probable) * Decimal(other)
+        return MonteCarloRange(min=min, probable=probable, max=max)
 
     def __repr__(self):
         return str(self.to_dict())
