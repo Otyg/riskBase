@@ -37,6 +37,7 @@ from .quantitative_risk import QuantitativeRisk
 
 class HybridRisk(QuantitativeRisk):
     def __init__(self, values:dict):
+        # TODO: Markörer för vad som finns i dicten
         if values:
             self.quantitative = QuantitativeRisk(values=values)
         else:

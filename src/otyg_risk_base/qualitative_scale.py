@@ -43,11 +43,11 @@ class QualitativeScale():
     def __init__(self, scales:dict = None):
         if not scales:
             scales = dict()
-        self.likelihood_initiation_or_occurence = scales.get('threat_event_frequency', self.DEFAULT_TEF)
-        self.likelihood_adverse_impact = scales.get('vulnerability', self.DEFAULT_VULNERABILITY)
-        self.impact = scales.get('risk', self.DEFAULT_CONSEQUENCE)
+        self.likelihood_initiation_or_occurence = scales.get('likelihood_initiation_or_occurence', self.DEFAULT_TEF)
+        self.likelihood_adverse_impact = scales.get('likelihood_adverse_impact', self.DEFAULT_VULNERABILITY)
+        self.impact = scales.get('impact', self.DEFAULT_CONSEQUENCE)
         self.num_to_text = scales.get('num_to_text', self.DEFAULT_NUM_TO_TEXT)
-        self.risk = scales.get('range_to_text', self.DEFAULT_RANGE_TO_TEXT)
+        self.risk = scales.get('risk', self.DEFAULT_RANGE_TO_TEXT)
 
     def get(self, raw, mapping):
         scale = getattr(self, mapping, None)
