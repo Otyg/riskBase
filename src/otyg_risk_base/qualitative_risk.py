@@ -28,6 +28,13 @@ class QualitativeRisk():
         self.impact:str = self.SCALE.get(impact)
         self.overall_risk:str = self.get_calculated_text(self.overall_likelihood_num*impact)
 
+    @classmethod
+    def from_dict(cls, values:dict):
+        return QualitativeRisk(
+            likelihood_init=values.get('likelihood_init'),
+            likelihood_impact=values.get('likelihood_impact'),
+            impact=values.get('impact'))
+
     def get(self):
         return {'risk': self.overall_risk, 'likelihood': self.overall_likelihood, 'impact': self.impact}
     
