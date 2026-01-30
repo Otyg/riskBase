@@ -31,6 +31,9 @@
 
 
 
+from typing import OrderedDict
+
+from .utils import *
 from .quantitative_risk import QuantitativeRisk
 
 class QuantitativeToQualitativeMappingThresholds():
@@ -70,7 +73,7 @@ class QuantitativeToQualitativeMappingThresholds():
         }
 
 class HybridRisk(QuantitativeRisk):
-    def __init__(self, values:dict=None):
+    def __init__(self, values:dict):
         if values:
             super().__init__(values=values)
         else:
@@ -82,15 +85,25 @@ class HybridRisk(QuantitativeRisk):
         else:
             self.thresholds = QuantitativeToQualitativeMappingThresholds(thresholds=values.get('thresholds'))
         
-        self.risk = {
-            'probability': values.get('probability') if values else self.calculate_probability(),
-            'consequence': values.get('consequence') if values else self.calculate_consequence(),
-            'risk': values.get('risk') if values else self.calculate_risk()}
+        if 'probability' in values:
+            self.risk = {
+                'probability': values.get('probability'),
+                'probability_text': values.get('probability_text'),
+                'consequence': values.get('consequence'),
+                'consequence_text': values.get('consequence_text'),
+                'risk': values.get('risk'),
+                'risk_text': values.get('risk_text'),
+                'level': values.get('level')}
+        else:
+            self.risk = dict()
+            self.calculate_risk()
     
     def get(self):
         return self.risk.copy()
     
     def calculate_risk(self):
+        self.calculate_probability()
+        self.calculate_consequence()
         value = self.risk['probability'] * self.risk['consequence']
         self.__set_values('risk', value, self.thresholds.risk_values)
         self.risk['risk'] = value
@@ -125,11 +138,28 @@ class HybridRisk(QuantitativeRisk):
         return me
     
     def __hash__(self):
-        return hash((super().__hash__(), str(self.risk), str(self.thresholds.to_dict())))
+        return hash((super().__hash__(), freeze(self.risk), freeze(self.thresholds.to_dict())))
     
     def __eq__(self, other):
         if isinstance(other, HybridRisk):
-            return self.__hash__() == other.__hash__() 
+            return self.__hash__() == other.__hash__()
+    
+    def __gt__(self, other):
+        gt = False
+        if isinstance(other, HybridRisk):
+            print(self.risk.get('risk'), other.risk.get('risk'))
+            if self.risk.get('risk') > other.risk.get('risk'):
+                gt = True
+            elif (self.risk.get('risk') == other.risk.get('risk')):
+                if self.risk.get('consequence') > other.risk.get('consequence'):
+                    gt = True
+        return gt
+
+    def __gte__(self, other):
+        gte = False
+        if self.__eq__(other) or self.__gt__(other):
+            gte = True
+        return gte
     
     def __repr__(self):
         return str(self.to_dict())
