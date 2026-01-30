@@ -29,10 +29,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-
-
-from typing import OrderedDict
-
+from .montecarlo import MonteCarloRange
+from .qualitative_risk import QualitativeRisk
 from .utils import *
 from .quantitative_risk import QuantitativeRisk
 
@@ -75,61 +73,41 @@ class QuantitativeToQualitativeMappingThresholds():
 class HybridRisk(QuantitativeRisk):
     def __init__(self, values:dict):
         if values:
-            super().__init__(values=values)
+            self.quantitative = QuantitativeRisk(values=values)
         else:
-            super()
+            self.quantitative = QuantitativeRisk()
         if not values or 'thresholds' not in values:
             self.thresholds = QuantitativeToQualitativeMappingThresholds()
         elif isinstance(values.get('thresholds'), QuantitativeToQualitativeMappingThresholds):
             self.thresholds = values.get('thresholds')
         else:
             self.thresholds = QuantitativeToQualitativeMappingThresholds(thresholds=values.get('thresholds'))
-        
-        if 'probability' in values:
-            self.risk = {
-                'probability': values.get('probability'),
-                'probability_text': values.get('probability_text'),
-                'consequence': values.get('consequence'),
-                'consequence_text': values.get('consequence_text'),
-                'risk': values.get('risk'),
-                'risk_text': values.get('risk_text'),
-                'level': values.get('level')}
-        else:
-            self.risk = dict()
-            self.calculate_risk()
+        self.qualitative = QualitativeRisk(likelihood_init=self.get_tef(), likelihood_impact=self.get_vuln(), impact=self.get_impact())
     
     def get(self):
         return self.risk.copy()
+    def get_tef(self) -> int:
+        return self.__set_values(self.quantitative.threat_event_frequency, self.thresholds.DEFAULT_PROBABILITY)
     
-    def calculate_risk(self):
-        self.calculate_probability()
-        self.calculate_consequence()
-        value = self.risk['probability'] * self.risk['consequence']
-        self.__set_values('risk', value, self.thresholds.risk_values)
-        self.risk['risk'] = value
-    
-    def calculate_probability(self):
-        self.__set_values('probability', self.loss_event_frequency.probable, self.thresholds.probability_values)
+    def get_vuln(self) -> int:
+        return self.__set_values(self.quantitative.vuln_score, self.thresholds.DEFAULT_PROBABILITY)
+        
+    def get_impact(self) -> int:
+        return self.__set_values(self.quantitative.loss_magnitude, self.thresholds.DEFAULT_CONSEQUENCE)
 
-    def __set_values(self, key, non_discreet_value, thresholds):
+    def __set_values(self, quantitative_value:MonteCarloRange, thresholds):
         threshold_max = max(thresholds, key=lambda x:x['threshold'])
+        threshold_min = min(thresholds, key=lambda x:x['threshold'])
         value = 0
-        text = ""
-        if non_discreet_value >= threshold_max['threshold']:
+        if quantitative_value.probable >= threshold_max['threshold']:
             value = threshold_max['value']
-            text = threshold_max['text']
+        elif quantitative_value.probable < threshold_min['threshold']:
+            value = threshold_min['value']
         else:
             for x in reversed(thresholds):
-                if non_discreet_value <= x['threshold']:
+                if quantitative_value.probable <= x['threshold']:
                     value = x['value']
-                    text = x['text']
-        if key=="risk":
-            self.risk.update({'level': value})
-        self.risk.update({key: value})
-        self.risk.update({key + '_text': text})
-    
-    def calculate_consequence(self):
-        self.__set_values('consequence', self.loss_magnitude.probable, self.thresholds.consequence_values)
+        return value
 
     def to_dict(self):
         me = super().to_dict()
