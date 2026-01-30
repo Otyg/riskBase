@@ -147,7 +147,6 @@ class HybridRisk(QuantitativeRisk):
     def __gt__(self, other):
         gt = False
         if isinstance(other, HybridRisk):
-            print(self.risk.get('risk'), other.risk.get('risk'))
             if self.risk.get('risk') > other.risk.get('risk'):
                 gt = True
             elif (self.risk.get('risk') == other.risk.get('risk')):
