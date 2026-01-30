@@ -30,7 +30,6 @@
 #
 
 import numpy as np
-import statistics
 from decimal import *
 
 
@@ -54,17 +53,34 @@ class MonteCarloRange():
             "max": float(self.max)
         }
     
-    def add(self, other):
+    def add(self, other = None):
         if isinstance(other, MonteCarloRange):
             max = self.max + other.max
             min = self.min + other.min
             probable = self.probable + other.probable
         else:
-            max = self.max + Decimal(other)
-            min = self.min + Decimal(other)
-            probable = self.probable + Decimal(other)
-        return MonteCarloRange(min=Decimal(min), probable=Decimal(probable), max=Decimal(max))
+            max = self.max + other
+            min = self.min + other
+            probable = self.probable + other
+        result = MonteCarloRange(min=Decimal(min), probable=Decimal(probable), max=Decimal(max))
+        return result
 
+    def sub(self, other = None):
+        if isinstance(other, MonteCarloRange):
+            max = self.max - other.max
+            min = self.min - other.min
+            probable = self.probable - other.probable
+        else:
+            max = self.max - other
+            min = self.min - other
+            probable = self.probable - other
+        if max < min:
+            tmp = max
+            max = min
+            min = tmp
+        result = MonteCarloRange(min=Decimal(min), probable=Decimal(probable), max=Decimal(max))
+        return result
+    
     def multiply(self, other = None):
         if isinstance(other, MonteCarloRange):
             max = self.max * other.max
@@ -74,7 +90,8 @@ class MonteCarloRange():
             max = Decimal(self.max) * Decimal(other)
             min = Decimal(self.min) * Decimal(other)
             probable = Decimal(self.probable) * Decimal(other)
-        return MonteCarloRange(min=Decimal(min), probable=Decimal(probable), max=Decimal(max))
+        result = MonteCarloRange(min=Decimal(min), probable=Decimal(probable), max=Decimal(max))
+        return result
 
     @classmethod
     def from_dict(cls, values:dict=None):
@@ -87,17 +104,12 @@ class MonteCarloRange():
         return str(self.to_dict())
     
     def __hash__(self):
-        return hash(("MonteCarloRange", self.max, self.min, self.probable))
+        return hash((self.min, self.max, self.probable))
     
-    def __eq__(self, value):
-        if not isinstance(value, MonteCarloRange) or value == None:
-            return False
-        elif self.__hash__() == value.__hash__():
+    def __eq__(self, other):
+        if isinstance(other, MonteCarloRange) and self.__hash__() == other.__hash__():
             return True
         return False
-    
-    def __ne__(self, value):
-        return not self.__eq__(value)
 
 class PertDistribution():
     def __init__(self,range: MonteCarloRange):
@@ -112,7 +124,9 @@ class PertDistribution():
 
 
 class MonteCarloSimulation():
-    def __init__(self, range: MonteCarloRange):
+    def __init__(self, range: MonteCarloRange=None):
+        if not range:
+            range = MonteCarloRange(probable=Decimal(1))
         if (range.min == range.max == range.probable):
             self.probable = Decimal(range.probable)
             range.max = Decimal(Decimal(range.probable)+Decimal(0.000000000001))
@@ -120,7 +134,7 @@ class MonteCarloSimulation():
         
         pd = PertDistribution(range=range)
         self.__samples = pd.get()
-        self.probable = Decimal(statistics.mode(self.__samples))
+        self.probable = Decimal(np.mean(self.__samples))
         self.p90 = Decimal(np.percentile(self.__samples, 90))
         self.max = Decimal(np.max(self.__samples))
         self.min = Decimal(np.min(self.__samples))
@@ -147,20 +161,49 @@ class MonteCarloSimulation():
         else:
             range = MonteCarloRange.from_dict(dict)
             return MonteCarloSimulation(range=range)
+    
+    def get_montecarlo_range(self):
+        return MonteCarloRange(min=self.min, probable=self.probable, max=self.max)
         
-    def multiply(self, other=None) -> MonteCarloRange:
+    def multiply(self, other):
         if isinstance(other, MonteCarloSimulation):
-            max = self.max * other.max
-            min = self.min * other.min
-            probable = self.probable * other.probable
+            range = self.get_montecarlo_range().multiply(other=other.get_montecarlo_range())
         else:
-            max = Decimal(self.max) * Decimal(other)
-            min = Decimal(self.min) * Decimal(other)
-            probable = Decimal(self.probable) * Decimal(other)
-        return MonteCarloRange(min=min, probable=probable, max=max)
-
+            range = self.get_montecarlo_range().multiply(other=other)
+        return MonteCarloSimulation(range=range)
+    
+    def add(self, other):
+        if isinstance(other, MonteCarloSimulation):
+            range = self.get_montecarlo_range().add(other=other.get_montecarlo_range())
+        else:
+            range = self.get_montecarlo_range().add(other=other)
+        return MonteCarloSimulation(range=range)
+    
+    def delta(self, other):
+        if isinstance(other, MonteCarloSimulation):
+            range = self.get_montecarlo_range().sub(other=other.get_montecarlo_range())
+        else:
+            range = self.get_montecarlo_range().sub(other=other)
+        return MonteCarloSimulation(range=range)
+    
+    def __add__(self, other):
+        return self.add(other)
+    def __radd__(self, other):
+        return self.add(other)
+    def __mul__(self, other):
+        return self.multiply(other)
+    def __rmul__(self, other):
+        return self.multiply(other)
     def __repr__(self):
         return str(self.to_dict())
     
     def __str__(self):
         return f"min: {str(self.min)} mode: {str(self.probable)} p90: {str(self.p90)} max: {str(self.max)}"
+    
+    def __hash__(self):
+        return hash((self.min, self.probable, self.p90, self.max))
+    
+    def __eq__(self, value):
+        if isinstance(value, MonteCarloSimulation) and self.__hash__() == value.__hash__():
+            return True
+        return False
