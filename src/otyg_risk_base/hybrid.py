@@ -31,9 +31,12 @@
 
 
 
+from typing import OrderedDict
+
+from .utils import *
 from .quantitative_risk import QuantitativeRisk
 
-class DiscreetThreshold():
+class QuantitativeToQualitativeMappingThresholds():
     DEFAULT_PROBABILITY = [
                          {'value':1, 'text':'Mycket låg', 'threshold': 0.1},
                          {'value':2, 'text':'Låg', 'threshold': 0.5},
@@ -70,27 +73,37 @@ class DiscreetThreshold():
         }
 
 class HybridRisk(QuantitativeRisk):
-    def __init__(self, values:dict=None):
+    def __init__(self, values:dict):
         if values:
             super().__init__(values=values)
         else:
             super()
         if not values or 'thresholds' not in values:
-            self.thresholds = DiscreetThreshold()
-        elif isinstance(values.get('thresholds'), DiscreetThreshold):
+            self.thresholds = QuantitativeToQualitativeMappingThresholds()
+        elif isinstance(values.get('thresholds'), QuantitativeToQualitativeMappingThresholds):
             self.thresholds = values.get('thresholds')
         else:
-            self.thresholds = DiscreetThreshold(thresholds=values.get('thresholds'))
+            self.thresholds = QuantitativeToQualitativeMappingThresholds(thresholds=values.get('thresholds'))
         
-        self.risk = {
-            'probability': values.get('probability', self.calculate_probability()),
-            'consequence': values.get('consequence', self.calculate_consequence()),
-            'risk': values.get('risk', self.calculate_risk())}
+        if 'probability' in values:
+            self.risk = {
+                'probability': values.get('probability'),
+                'probability_text': values.get('probability_text'),
+                'consequence': values.get('consequence'),
+                'consequence_text': values.get('consequence_text'),
+                'risk': values.get('risk'),
+                'risk_text': values.get('risk_text'),
+                'level': values.get('level')}
+        else:
+            self.risk = dict()
+            self.calculate_risk()
     
     def get(self):
         return self.risk.copy()
     
     def calculate_risk(self):
+        self.calculate_probability()
+        self.calculate_consequence()
         value = self.risk['probability'] * self.risk['consequence']
         self.__set_values('risk', value, self.thresholds.risk_values)
         self.risk['risk'] = value
@@ -123,9 +136,33 @@ class HybridRisk(QuantitativeRisk):
         me.update(self.risk)
         me.update({"thresholds": self.thresholds.to_dict()})
         return me
+    
+    def __hash__(self):
+        return hash((super().__hash__(), freeze(self.risk), freeze(self.thresholds.to_dict())))
+    
+    def __eq__(self, other):
+        if isinstance(other, HybridRisk):
+            return self.__hash__() == other.__hash__()
+    
+    def __gt__(self, other):
+        gt = False
+        if isinstance(other, HybridRisk):
+            print(self.risk.get('risk'), other.risk.get('risk'))
+            if self.risk.get('risk') > other.risk.get('risk'):
+                gt = True
+            elif (self.risk.get('risk') == other.risk.get('risk')):
+                if self.risk.get('consequence') > other.risk.get('consequence'):
+                    gt = True
+        return gt
 
+    def __gte__(self, other):
+        gte = False
+        if self.__eq__(other) or self.__gt__(other):
+            gte = True
+        return gte
+    
     def __repr__(self):
         return str(self.to_dict())
-    
+
     def __str__(self):
         return f"Sannolikhet: {str(self.risk['probability'])} ({self.risk['probability_text']})\nKonsekvens: {str(self.risk['consequence'])} ({self.risk['consequence_text']})\nRisk: {str(self.risk['risk'])} ({self.risk['risk_text']})"
