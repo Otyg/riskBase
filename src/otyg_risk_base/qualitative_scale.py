@@ -1,5 +1,7 @@
 from typing import Dict, List, Tuple
 
+from .utils import freeze
+
 class QualitativeScale():
     DEFAULT_NUM_TO_TEXT:Dict[str, int] = {
         5: 'Very High',
@@ -58,7 +60,12 @@ class QualitativeScale():
             'num_to_text': self.num_to_text,
             'risk': self.risk,
         }
-
+    def __hash__(self):
+        return hash(freeze(self.to_dict()))
+    
+    def __eq__(self, other):
+        return self.__hash__() == other.__hash__()
+    
     @classmethod
     def from_dict(cls, scales: dict):
         tmp = QualitativeScale()

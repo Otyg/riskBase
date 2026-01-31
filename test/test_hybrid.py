@@ -17,5 +17,9 @@ class TestQuantitativeRisk(unittest.TestCase):
     
     def test_serialization_deserialization(self):
         risk = HybridRisk({'threat_event_frequency': {'min':0,'probable':1,'max':2}, 'vulnerability': {'min':1,'probable':2,'max':3}, 'loss_magnitude':{'min':3,'probable':4,'max':5}, 'budget': 10000, 'currency':"SEK"})
-        risk_new = HybridRisk(risk.to_dict())
+        risk_new = HybridRisk.from_dict(risk.to_dict())
         self.assertTrue(risk == risk_new)
+        risk_mod = HybridRisk({'threat_event_frequency': {'min':1,'probable':3,'max':5}, 'vulnerability': {'min':1,'probable':2,'max':3}, 'loss_magnitude':{'min':3,'probable':4,'max':5}, 'budget': 10000, 'currency':"SEK"})
+        risk_new = HybridRisk.from_dict(risk_mod.to_dict())
+        self.assertFalse(risk == risk_new)
+        self.assertTrue(risk_mod == risk_new)

@@ -43,7 +43,7 @@ class QualitativeRisk():
         risk.likelihood_adverse_impact = values.get("likelihood_adverse_impact")
         risk.impact = values.get("impact")
         risk.overall_risk = values.get("overall_risk")
-        risk.mappings = QualitativeScale.from_dict(values.get("mappings"))
+        risk.mappings = QualitativeScale.from_dict(scales=values.get("mappings"))
         return risk
 
     def __hash__(self):
