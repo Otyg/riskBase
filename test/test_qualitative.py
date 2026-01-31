@@ -18,5 +18,12 @@ class TestQuantitativeRisk(unittest.TestCase):
         riskII = QualitativeRisk(likelihood_init=3, likelihood_impact=3, impact=5)
         self.assertTrue(risk == risk)
         self.assertFalse(risk == riskII)
+    
+    def test_persistence(self):
+        risk = QualitativeRisk()
+        self.assertEqual(risk, QualitativeRisk.from_dict(risk.to_dict()))
+        riskII = QualitativeRisk(likelihood_init=3, likelihood_impact=3, impact=5)
+        self.assertEqual(riskII, QualitativeRisk.from_dict(riskII.to_dict()))
+
 if __name__ == '__main__':
     unittest.main()
