@@ -13,5 +13,10 @@ class TestQuantitativeRisk(unittest.TestCase):
         expected = {'risk': "High", 'likelihood': "Moderate", 'impact': "Very High"}
         self.assertEqual(risk.get(), expected)
 
+    def test_eq(self):
+        risk = QualitativeRisk()
+        riskII = QualitativeRisk(likelihood_init=3, likelihood_impact=3, impact=5)
+        self.assertTrue(risk == risk)
+        self.assertFalse(risk == riskII)
 if __name__ == '__main__':
     unittest.main()
