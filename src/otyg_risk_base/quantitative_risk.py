@@ -95,6 +95,11 @@ class QuantitativeRisk():
             return self.__hash__() == other.__hash__()
         return False
     
+    def __gt__(self, other):
+        if self == other:
+            return False
+        res = False
+        
     def __hash__(self):
         return hash((self.threat_event_frequency, self.vuln_score, self.loss_event_frequency, self.loss_magnitude, self.ale, self.annual_loss_expectancy, self.budget, self.currency))
     def __str__(self):
