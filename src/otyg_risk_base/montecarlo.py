@@ -110,6 +110,13 @@ class MonteCarloRange():
         if isinstance(other, MonteCarloRange) and self.__hash__() == other.__hash__():
             return True
         return False
+    
+    def __gt__(self, other):
+        if self == other:
+            return False
+        if self.min >= other.min and self.max > other.max:
+            return True
+        return False
 
 class PertDistribution():
     def __init__(self,range: MonteCarloRange):
@@ -205,5 +212,12 @@ class MonteCarloSimulation():
     
     def __eq__(self, value):
         if isinstance(value, MonteCarloSimulation) and self.__hash__() == value.__hash__():
+            return True
+        return False
+    
+    def __gt__(self, other):
+        if self == other:
+            return False
+        if self.min >= other.min and self.max > other.max:
             return True
         return False

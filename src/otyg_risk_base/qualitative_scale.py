@@ -7,6 +7,7 @@ class QualitativeScale():
         3: 'Moderate',
         2: 'Low',
         1: 'Very Low',
+        0: 'Very Low'
     }
 
     DEFAULT_RANGE_TO_TEXT: List[Dict] = [

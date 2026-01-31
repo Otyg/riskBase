@@ -35,7 +35,7 @@ from .qualitative_risk import QualitativeRisk
 from .utils import *
 from .quantitative_risk import QuantitativeRisk
 
-class HybridRisk(QuantitativeRisk):
+class HybridRisk():
     def __init__(self, values:dict):
         # TODO: Markörer för vad som finns i dicten
         if values:
@@ -50,3 +50,8 @@ class HybridRisk(QuantitativeRisk):
     
     def get(self):
         return self.risk.copy()
+    
+    def __gt__(self, other):
+        if self == other:
+            return False
+        
