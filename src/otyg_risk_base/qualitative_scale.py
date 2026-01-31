@@ -50,6 +50,25 @@ class QualitativeScale():
         self.num_to_text = scales.get('num_to_text', self.DEFAULT_NUM_TO_TEXT)
         self.risk = scales.get('risk', self.DEFAULT_RANGE_TO_TEXT)
 
+    def to_dict(self):
+        return {
+            'likelihood_initiation_or_occurence': self.likelihood_initiation_or_occurence,
+            'likelihood_adverse_impact': self.likelihood_adverse_impact,
+            'impact': self.impact,
+            'num_to_text': self.num_to_text,
+            'risk': self.risk,
+        }
+
+    @classmethod
+    def from_dict(cls, scales: dict):
+        tmp = QualitativeScale()
+        tmp.likelihood_initiation_or_occurence = scales.get('likelihood_initiation_or_occurence', cls.DEFAULT_TEF)
+        tmp.likelihood_adverse_impact = scales.get('likelihood_adverse_impact', cls.DEFAULT_VULNERABILITY)
+        tmp.impact = scales.get('impact', cls.DEFAULT_CONSEQUENCE)
+        tmp.num_to_text = scales.get('num_to_text', cls.DEFAULT_NUM_TO_TEXT)
+        tmp.risk = scales.get('risk', cls.DEFAULT_RANGE_TO_TEXT)
+        return tmp
+    
     def get(self, raw, mapping):
         scale = getattr(self, mapping, None)
         num = None

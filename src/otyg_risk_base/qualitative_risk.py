@@ -7,15 +7,18 @@ from .utils import *
 
 class QualitativeRisk():
 
-    def __init__(self, likelihood_init:int=1, likelihood_impact:int=1, impact:int=1):
-        sc=QualitativeScale()
-        raw_likelihood = sc.get(raw=likelihood_impact*likelihood_init, mapping="risk")
+    def __init__(self, likelihood_init:int=1, likelihood_impact:int=1, impact:int=1, mappings:QualitativeScale=None):
+        if not mappings:
+            self.mappings=QualitativeScale()
+        else:
+            self.mappings = mappings
+        raw_likelihood = self.mappings.get(raw=likelihood_impact*likelihood_init, mapping="risk")
         self.overall_likelihood:str = raw_likelihood.get("text")
         self.overall_likelihood_num:int = raw_likelihood.get("numeric")
-        self.likelihood_initiation_or_occurence:str = sc.num_to_text[likelihood_init]
-        self.likelihood_adverse_impact:str = sc.num_to_text[likelihood_impact]
-        self.impact:str = sc.num_to_text[impact]
-        self.overall_risk:str = sc.get(raw=self.overall_likelihood_num*impact, mapping="risk").get("text")
+        self.likelihood_initiation_or_occurence:str = self.mappings.num_to_text[likelihood_init]
+        self.likelihood_adverse_impact:str = self.mappings.num_to_text[likelihood_impact]
+        self.impact:str = self.mappings.num_to_text[impact]
+        self.overall_risk:str = self.mappings.get(raw=self.overall_likelihood_num*impact, mapping="risk").get("text")
 
     def get(self):
         return {'risk': self.overall_risk, 'likelihood': self.overall_likelihood, 'impact': self.impact}
@@ -28,6 +31,7 @@ class QualitativeRisk():
             "likelihood_adverse_impact" : self.likelihood_adverse_impact,
             "impact" : self.impact,
             "overall_risk" : self.overall_risk,
+            "mappings": self.mappings.to_dict()
         }
         return risk
     @classmethod
