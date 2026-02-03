@@ -97,8 +97,10 @@ class MonteCarloRange():
     def from_dict(cls, values:dict=None):
         if isinstance(values, dict):
             return MonteCarloRange(min=values['min'], probable=values['probable'], max=values['max'])
+        elif isinstance(values, MonteCarloRange):
+            return values
         else:
-            raise TypeError()
+            raise TypeError
 
     def __repr__(self):
         return str(self.to_dict())
@@ -156,17 +158,17 @@ class MonteCarloSimulation():
         }
     
     @classmethod
-    def from_dict(cls, dict:dict={}):
-        if 'p90' in dict:
+    def from_dict(cls, values:dict={}):
+        if isinstance(values, dict) and 'p90' in values:
             mcs = MonteCarloSimulation()
-            mcs.min = Decimal(dict['min'])
-            mcs.probable = Decimal(dict['probable'])
-            mcs.max = Decimal(dict['max'])
-            mcs.p90 = Decimal(dict['p90'])
-            mcs.__samples = np.array(dict.get('__samples', []))
+            mcs.min = Decimal(values['min'])
+            mcs.probable = Decimal(values['probable'])
+            mcs.max = Decimal(values['max'])
+            mcs.p90 = Decimal(values['p90'])
+            mcs.__samples = np.array(values.get('__samples', []))
             return mcs
         else:
-            range = MonteCarloRange.from_dict(dict)
+            range = MonteCarloRange.from_dict(values)
             return MonteCarloSimulation(range=range)
     
     def get_montecarlo_range(self):

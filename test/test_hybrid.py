@@ -1,5 +1,6 @@
 import unittest
 
+from src.otyg_risk_base.montecarlo import MonteCarloRange
 from src.otyg_risk_base.hybrid import HybridRisk
 
 class TestQuantitativeRisk(unittest.TestCase):
@@ -16,6 +17,9 @@ class TestQuantitativeRisk(unittest.TestCase):
         self.assertFalse(risk == risk_mod)
     
     def test_serialization_deserialization(self):
+        risk = HybridRisk({'threat_event_frequency': MonteCarloRange(min=0, probable=1, max=2), 'vulnerability':  MonteCarloRange(min=1, probable=2, max=3), 'loss_magnitude': MonteCarloRange(min=4, probable=5, max=6), 'budget': 10000, 'currency':"SEK"})
+        risk_new = HybridRisk.from_dict(risk.to_dict())
+        self.assertTrue(risk == risk_new)
         risk = HybridRisk({'threat_event_frequency': {'min':0,'probable':1,'max':2}, 'vulnerability': {'min':1,'probable':2,'max':3}, 'loss_magnitude':{'min':3,'probable':4,'max':5}, 'budget': 10000, 'currency':"SEK"})
         risk_new = HybridRisk.from_dict(risk.to_dict())
         self.assertTrue(risk == risk_new)
