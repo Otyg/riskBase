@@ -89,4 +89,7 @@ class QualitativeScale():
             for range in scale:
                 if range.get('low') <= raw < range.get('high'):
                     num = range.get('value')
-        return {'numeric': num, 'text': self.num_to_text.get(num)}
+        lookup = num
+        if not self.num_to_text.get(num):
+            lookup = str(num)
+        return {'numeric': num, 'text': self.num_to_text.get(lookup)}
