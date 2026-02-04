@@ -15,11 +15,21 @@ class QualitativeRisk():
         raw_likelihood = self.mappings.get(raw=likelihood_impact*likelihood_init, mapping="risk")
         self.overall_likelihood:str = raw_likelihood.get("text")
         self.overall_likelihood_num:int = raw_likelihood.get("numeric")
-        self.likelihood_initiation_or_occurence:str = self.mappings.num_to_text[likelihood_init]
-        self.likelihood_adverse_impact:str = self.mappings.num_to_text[likelihood_impact]
-        self.impact:str = self.mappings.num_to_text[impact]
+        self.likelihood_initiation_or_occurence:str = self.get_text_from_num(likelihood_init)
+        self.likelihood_adverse_impact:str = self.get_text_from_num(likelihood_impact)
+        self.impact:str = self.get_text_from_num(impact)
         self.overall_risk:str = self.mappings.get(raw=self.overall_likelihood_num*impact, mapping="risk").get("text")
 
+    def get_text_from_num(self, num):
+        value = ""
+        try:
+            value = self.mappings.num_to_text[num]
+        except KeyError:
+            try:
+                value = self.mappings.num_to_text[str(num)]
+            except:
+                raise
+        return value
     def get(self):
         return {'risk': self.overall_risk, 'likelihood': self.overall_likelihood, 'impact': self.impact}
     
