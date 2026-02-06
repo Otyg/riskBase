@@ -82,7 +82,7 @@ class MonteCarloRange():
         return result
     
     def multiply(self, other = None):
-        if isinstance(other, MonteCarloRange):
+        if isinstance(other, MonteCarloRange) or isinstance(other, MonteCarloSimulation):
             max = self.max * other.max
             min = self.min * other.min
             probable = self.probable * other.probable
@@ -90,6 +90,12 @@ class MonteCarloRange():
             max = Decimal(self.max) * Decimal(other)
             min = Decimal(self.min) * Decimal(other)
             probable = Decimal(self.probable) * Decimal(other)
+        if(min < 1e-20):
+            min=Decimal(0.0)
+        if(probable < 1e-20):
+            probable=Decimal(0.0)
+        if(max < 1e-20):
+            max=Decimal(0.0)    
         result = MonteCarloRange(min=Decimal(min), probable=Decimal(probable), max=Decimal(max))
         return result
 
