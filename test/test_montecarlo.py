@@ -8,6 +8,11 @@ class TestMonteCarloRange(unittest.TestCase):
         mr = MonteCarloRange()
         self.assertEqual(mr.probable, Decimal(0))
     
+    def test_zero_range_multiply(self):
+        mr = MonteCarloRange(min=0, probable=0, max=0).multiply(MonteCarloRange(min=0, probable=0, max=0)).multiply(10000.0)
+        self.assertEqual(mr.min, mr.max)
+        mr = MonteCarloRange.from_dict({'min': 0.0, 'probable': 0.0, 'max': 0.0}).multiply(MonteCarloRange.from_dict({'min': 0.0, 'probable': 0.0, 'max': 0.0})).multiply(Decimal(1000.0))
+        self.assertEqual(mr.min, mr.max)
     def test_probable_less_than_min(self):
         with self.assertRaises(ValueError):
             mc = MonteCarloRange(min= 1, probable=0, max=2)
