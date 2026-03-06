@@ -32,7 +32,7 @@
 import numpy as np
 from decimal import Decimal
 
-from src.otyg_risk_base.distributions import PertDistribution
+from src.otyg_risk_base.distributions import LogLogisticDistribution, PertDistribution
 
 
 class MonteCarloRange:
@@ -153,10 +153,11 @@ class MonteCarloSimulation:
             range.max = Decimal(Decimal(range.probable) + Decimal(0.000000000001))
             range.min = Decimal(Decimal(range.probable) - Decimal(0.000000000001))
 
-        pd = PertDistribution(range=range)
+        pd = LogLogisticDistribution(range=range)
         self.__samples = pd.get()
         self.probable = Decimal(np.mean(self.__samples))
         self.p90 = Decimal(np.percentile(self.__samples, 90))
+        self.p75 = Decimal(np.percentile(self.__samples, 75))
         self.max = Decimal(np.max(self.__samples))
         self.min = Decimal(np.min(self.__samples))
 
@@ -166,6 +167,7 @@ class MonteCarloSimulation:
             "probable": float(self.probable),
             "max": float(self.max),
             "p90": float(self.p90),
+            "p75": float(self.p75),
             "__samples": self.__samples,
         }
 
@@ -177,6 +179,7 @@ class MonteCarloSimulation:
             mcs.probable = Decimal(values["probable"])
             mcs.max = Decimal(values["max"])
             mcs.p90 = Decimal(values["p90"])
+            mcs.p75 = Decimal(values["p75"])
             mcs.__samples = np.array(values.get("__samples", []))
             return mcs
         else:
@@ -225,10 +228,10 @@ class MonteCarloSimulation:
         return str(self.to_dict())
 
     def __str__(self):
-        return f"min: {str(self.min)} mode: {str(self.probable)} p90: {str(self.p90)} max: {str(self.max)}"
+        return f"min: {str(self.min)} mode: {str(self.probable)} p75: {str(self.p75)} p90: {str(self.p90)} max: {str(self.max)}"
 
     def __hash__(self):
-        return hash((self.min, self.probable, self.p90, self.max))
+        return hash((self.min, self.probable, self.p75, self.p90, self.max))
 
     def __eq__(self, value):
         if (
