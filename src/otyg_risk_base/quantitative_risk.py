@@ -34,7 +34,7 @@ from decimal import *
 from .montecarlo import MonteCarloRange, MonteCarloSimulation
 
 
-class QuantitativeRisk():
+class QuantitativeRisk:
     def __init__(self, values: dict = None):
         if not values:
             self.threat_event_frequency = MonteCarloRange()
@@ -43,24 +43,36 @@ class QuantitativeRisk():
             self.budget = Decimal(1000000)
             self.currency = "SEK"
         else:
-            self.threat_event_frequency = MonteCarloRange.from_dict(values['threat_event_frequency'])
-            self.vuln_score = MonteCarloRange.from_dict(values['vulnerability'])
-            self.loss_magnitude = MonteCarloSimulation.from_dict(values.get('loss_magnitude'))
-            self.budget = Decimal(values['budget'])
-            self.currency = values['currency']
-        if values and 'loss_event_frequency' in values:
-            self.loss_event_frequency = MonteCarloSimulation.from_dict(values.get('loss_event_frequency'))
-            if 'ale' in values and 'annual_loss_expectancy' in values:
-                self.ale = MonteCarloSimulation.from_dict(values.get('ale'))
-                self.annual_loss_expectancy = MonteCarloSimulation.from_dict(values.get('annual_loss_expectancy'))
+            self.threat_event_frequency = MonteCarloRange.from_dict(
+                values["threat_event_frequency"]
+            )
+            self.vuln_score = MonteCarloRange.from_dict(values["vulnerability"])
+            self.loss_magnitude = MonteCarloSimulation.from_dict(
+                values.get("loss_magnitude")
+            )
+            self.budget = Decimal(values["budget"])
+            self.currency = values["currency"]
+        if values and "loss_event_frequency" in values:
+            self.loss_event_frequency = MonteCarloSimulation.from_dict(
+                values.get("loss_event_frequency")
+            )
+            if "ale" in values and "annual_loss_expectancy" in values:
+                self.ale = MonteCarloSimulation.from_dict(values.get("ale"))
+                self.annual_loss_expectancy = MonteCarloSimulation.from_dict(
+                    values.get("annual_loss_expectancy")
+                )
             else:
                 self.update_ale()
         else:
-            self.loss_event_frequency = MonteCarloSimulation(self.threat_event_frequency.multiply(self.vuln_score))
+            self.loss_event_frequency = MonteCarloSimulation(
+                self.threat_event_frequency.multiply(self.vuln_score)
+            )
             self.update_ale()
-    
+
     def update_ale(self):
-        self.ale = self.loss_event_frequency.multiply(self.loss_magnitude).multiply(self.budget)
+        self.ale = self.loss_event_frequency.multiply(self.loss_magnitude).multiply(
+            self.budget
+        )
         self.annual_loss_expectancy = MonteCarloSimulation(self.ale)
 
     def to_dict(self):
@@ -72,35 +84,62 @@ class QuantitativeRisk():
             "ale": self.ale.to_dict(),
             "annual_loss_expectancy": self.annual_loss_expectancy.to_dict(),
             "budget": float(self.budget),
-            "currency": self.currency
+            "currency": self.currency,
         }
+
     @classmethod
     def from_dict(cls, values):
         risk = QuantitativeRisk()
-        risk.threat_event_frequency = MonteCarloRange.from_dict(values['threat_event_frequency'])
-        risk.vuln_score = MonteCarloRange.from_dict(values['vulnerability'])
-        risk.loss_magnitude = MonteCarloSimulation.from_dict(values.get('loss_magnitude'))
-        risk.budget = Decimal(values['budget'])
-        risk.currency = values['currency']
-        risk.loss_event_frequency = MonteCarloSimulation.from_dict(values.get('loss_event_frequency'))
-        risk.ale = MonteCarloSimulation.from_dict(values.get('ale'))
-        risk.annual_loss_expectancy = MonteCarloSimulation.from_dict(values.get('annual_loss_expectancy'))
+        risk.threat_event_frequency = MonteCarloRange.from_dict(
+            values["threat_event_frequency"]
+        )
+        risk.vuln_score = MonteCarloRange.from_dict(values["vulnerability"])
+        risk.loss_magnitude = MonteCarloSimulation.from_dict(
+            values.get("loss_magnitude")
+        )
+        risk.budget = Decimal(values["budget"])
+        risk.currency = values["currency"]
+        risk.loss_event_frequency = MonteCarloSimulation.from_dict(
+            values.get("loss_event_frequency")
+        )
+        risk.ale = MonteCarloSimulation.from_dict(values.get("ale"))
+        risk.annual_loss_expectancy = MonteCarloSimulation.from_dict(
+            values.get("annual_loss_expectancy")
+        )
         return risk
-    
+
     def __repr__(self):
         return str(self.to_dict())
-    
+
     def __eq__(self, other):
         if isinstance(other, QuantitativeRisk):
             return self.__hash__() == other.__hash__()
         return False
-    
+
     def __gt__(self, other):
         if self == other:
             return False
         res = False
-        
+
     def __hash__(self):
-        return hash((self.threat_event_frequency, self.vuln_score, self.loss_event_frequency, self.loss_magnitude, self.ale, self.annual_loss_expectancy, self.budget, self.currency))
+        return hash(
+            (
+                self.threat_event_frequency,
+                self.vuln_score,
+                self.loss_event_frequency,
+                self.loss_magnitude,
+                self.ale,
+                self.annual_loss_expectancy,
+                self.budget,
+                self.currency,
+            )
+        )
+
     def __str__(self):
-        return str("ALE (p90): " + str(round(self.annual_loss_expectancy.p90, 2)) + f" {self.currency}/år\nALE (p50): " + str(round(self.annual_loss_expectancy.probable, 2)) + f" {self.currency}/år\n")
+        return str(
+            "ALE (p90): "
+            + str(round(self.annual_loss_expectancy.p90, 2))
+            + f" {self.currency}/år\nALE (p50): "
+            + str(round(self.annual_loss_expectancy.probable, 2))
+            + f" {self.currency}/år\n"
+        )
