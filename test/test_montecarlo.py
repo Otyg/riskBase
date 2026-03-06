@@ -3,50 +3,63 @@ import unittest
 
 from src.otyg_risk_base.montecarlo import MonteCarloRange, MonteCarloSimulation
 
+
 class TestMonteCarloRange(unittest.TestCase):
     def test_no_arg(self):
         mr = MonteCarloRange()
         self.assertEqual(mr.probable, Decimal(0))
-    
+
     def test_zero_range_multiply(self):
-        mr = MonteCarloRange(min=0, probable=0, max=0).multiply(MonteCarloRange(min=0, probable=0, max=0)).multiply(10000.0)
+        mr = (
+            MonteCarloRange(min=0, probable=0, max=0)
+            .multiply(MonteCarloRange(min=0, probable=0, max=0))
+            .multiply(10000.0)
+        )
         self.assertEqual(mr.min, mr.max)
-        mr = MonteCarloRange.from_dict({'min': 0.0, 'probable': 0.0, 'max': 0.0}).multiply(MonteCarloRange.from_dict({'min': 0.0, 'probable': 0.0, 'max': 0.0})).multiply(Decimal(1000.0))
+        mr = (
+            MonteCarloRange.from_dict({"min": 0.0, "probable": 0.0, "max": 0.0})
+            .multiply(
+                MonteCarloRange.from_dict({"min": 0.0, "probable": 0.0, "max": 0.0})
+            )
+            .multiply(Decimal(1000.0))
+        )
         self.assertEqual(mr.min, mr.max)
+
     def test_probable_less_than_min(self):
         with self.assertRaises(ValueError):
-            mc = MonteCarloRange(min= 1, probable=0, max=2)
-    
+            mc = MonteCarloRange(min=1, probable=0, max=2)
+
     def test_equals(self):
-        actual = MonteCarloRange(min= 0, probable=1, max=2)
-        other = MonteCarloRange(min= 0, probable=1, max=2)
-        other_neq = MonteCarloRange(min= 1, probable=2, max=3)
+        actual = MonteCarloRange(min=0, probable=1, max=2)
+        other = MonteCarloRange(min=0, probable=1, max=2)
+        other_neq = MonteCarloRange(min=1, probable=2, max=3)
         self.assertTrue(actual == actual)
         self.assertTrue(actual == other)
         self.assertFalse(actual == other_neq)
         self.assertFalse(actual == 1)
 
     def test_add(self):
-        actual = MonteCarloRange(min= 0, probable=1, max=2).add(MonteCarloRange(min= 1, probable=2, max=3))
-        expected = MonteCarloRange(min= 1, probable=3, max=5)
-        actual_scalar = MonteCarloRange(min= 0, probable=1, max=2).add(1)
-        expected_scalar = MonteCarloRange(min= 1, probable=2, max=3)
-        not_expected = MonteCarloRange(min= 2, probable=3, max=5)
+        actual = MonteCarloRange(min=0, probable=1, max=2).add(
+            MonteCarloRange(min=1, probable=2, max=3)
+        )
+        expected = MonteCarloRange(min=1, probable=3, max=5)
+        actual_scalar = MonteCarloRange(min=0, probable=1, max=2).add(1)
+        expected_scalar = MonteCarloRange(min=1, probable=2, max=3)
+        not_expected = MonteCarloRange(min=2, probable=3, max=5)
         self.assertTrue(actual == expected)
         self.assertTrue(actual_scalar == expected_scalar)
         self.assertFalse(actual == not_expected)
 
     def test_serialization_and_deserialization(self):
-        original = MonteCarloRange(min= 1, probable=3, max=5)
+        original = MonteCarloRange(min=1, probable=3, max=5)
         org_dict = original.to_dict()
         copy = MonteCarloRange.from_dict(org_dict)
         self.assertEqual(original, copy)
-        self.assertNotEqual(original, MonteCarloRange.from_dict({
-            "min": 1,
-            "probable": 3,
-            "max": 10
-        }))
-        
+        self.assertNotEqual(
+            original, MonteCarloRange.from_dict({"min": 1, "probable": 3, "max": 10})
+        )
+
+
 class TestMonteCarloSimulation(unittest.TestCase):
     def test_creation(self):
         range = MonteCarloRange(min=1, probable=2, max=3)
@@ -55,22 +68,22 @@ class TestMonteCarloSimulation(unittest.TestCase):
         self.assertAlmostEqual(sim.probable, 2, delta=0.1)
         self.assertAlmostEqual(sim.max, 3, delta=0.1)
         self.assertAlmostEqual(sim.p90, Decimal(2.5), delta=0.1)
-    
+
     def test_equals(self):
         sim = MonteCarloSimulation(range=MonteCarloRange(min=1, probable=2, max=3))
         other = MonteCarloSimulation(range=MonteCarloRange(min=1, probable=2, max=3))
         self.assertTrue(sim == sim)
         self.assertFalse(sim == other)
-    
+
     def test_serialization_deserialization(self):
         sim = MonteCarloSimulation(range=MonteCarloRange(min=1, probable=2, max=3))
         other = MonteCarloSimulation().from_dict(sim.to_dict())
         self.assertTrue(sim == other)
-    
+
     def test_multiplication(self):
         first = MonteCarloSimulation(range=MonteCarloRange(min=1, probable=2, max=3))
         second = MonteCarloSimulation(range=MonteCarloRange(min=1, probable=2, max=3))
-        
+
         mul = first.multiply(second)
         mul_oper = first * second
         mul_roper = second * first
@@ -103,11 +116,11 @@ class TestMonteCarloSimulation(unittest.TestCase):
         self.assertAlmostEqual(mul_scalar.p90, Decimal(5), delta=threshold)
         self.assertAlmostEqual(mul_scalar.p90, mul_scalar_oper.p90, delta=threshold)
         self.assertAlmostEqual(mul_scalar.p90, mul_scalar_roper.p90, delta=threshold)
-    
+
     def test_addition(self):
         first = MonteCarloSimulation(range=MonteCarloRange(min=1, probable=2, max=3))
         second = MonteCarloSimulation(range=MonteCarloRange(min=1, probable=2, max=3))
-        
+
         add = first.add(second)
         add_oper = first + second
         add_roper = second + first
@@ -140,7 +153,7 @@ class TestMonteCarloSimulation(unittest.TestCase):
         self.assertAlmostEqual(add_scalar.p90, Decimal(4), delta=0.6)
         self.assertAlmostEqual(add_scalar.p90, add_scalar_oper.p90, delta=0.6)
         self.assertAlmostEqual(add_scalar.p90, add_scalar_roper.p90, delta=0.6)
-    
+
     def test_delta(self):
         first = MonteCarloSimulation(range=MonteCarloRange(min=1, probable=2, max=3))
         second = MonteCarloSimulation(range=MonteCarloRange(min=2, probable=4, max=6))
@@ -156,5 +169,6 @@ class TestMonteCarloSimulation(unittest.TestCase):
         self.assertAlmostEqual(sub_scalar.probable, 0, delta=threshold)
         self.assertAlmostEqual(sub_scalar.max, 1, delta=threshold)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

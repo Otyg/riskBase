@@ -30,51 +30,71 @@
 #
 
 from .qualitative_scale import QualitativeScale
-from .montecarlo import MonteCarloRange
 from .qualitative_risk import QualitativeRisk
 from .utils import *
 from .quantitative_risk import QuantitativeRisk
 
-class HybridRisk():
-    def __init__(self, values:dict = None):
+
+class HybridRisk:
+    def __init__(self, values: dict = None):
         # TODO: Markörer för vad som finns i dicten
         if values:
             if "mappings" in values:
-                qs = QualitativeScale(scales=values.get('mappings'))
+                qs = QualitativeScale(scales=values.get("mappings"))
             else:
                 qs = QualitativeScale()
             self.quantitative = QuantitativeRisk(values=values)
             self.qualitative = QualitativeRisk(
-            likelihood_init=qs.get(raw=self.quantitative.threat_event_frequency.probable, mapping='likelihood_initiation_or_occurence').get('numeric'),
-            likelihood_impact=qs.get(raw=self.quantitative.vuln_score.probable, mapping='likelihood_adverse_impact').get('numeric'),
-                impact=qs.get(raw=self.quantitative.loss_magnitude.probable, mapping='impact').get('numeric'),
-                mappings=qs)
+                likelihood_init=qs.get(
+                    raw=self.quantitative.threat_event_frequency.probable,
+                    mapping="likelihood_initiation_or_occurence",
+                ).get("numeric"),
+                likelihood_impact=qs.get(
+                    raw=self.quantitative.vuln_score.probable,
+                    mapping="likelihood_adverse_impact",
+                ).get("numeric"),
+                impact=qs.get(
+                    raw=self.quantitative.loss_magnitude.probable, mapping="impact"
+                ).get("numeric"),
+                mappings=qs,
+            )
         else:
             self.quantitative = QuantitativeRisk()
             qs = QualitativeScale()
             self.qualitative = QualitativeRisk(
-                likelihood_init=qs.get(raw=self.quantitative.threat_event_frequency.probable, mapping='likelihood_initiation_or_occurence').get('numeric'),
-                likelihood_impact=qs.get(raw=self.quantitative.vuln_score.probable, mapping='likelihood_adverse_impact').get('numeric'),
-                impact=qs.get(raw=self.quantitative.loss_magnitude.probable, mapping='impact').get('numeric'),
-                mappings=qs)
+                likelihood_init=qs.get(
+                    raw=self.quantitative.threat_event_frequency.probable,
+                    mapping="likelihood_initiation_or_occurence",
+                ).get("numeric"),
+                likelihood_impact=qs.get(
+                    raw=self.quantitative.vuln_score.probable,
+                    mapping="likelihood_adverse_impact",
+                ).get("numeric"),
+                impact=qs.get(
+                    raw=self.quantitative.loss_magnitude.probable, mapping="impact"
+                ).get("numeric"),
+                mappings=qs,
+            )
+
     def to_dict(self):
         me = {
             "quantitative": self.quantitative.to_dict(),
-            "qualitative": self.qualitative.to_dict()
+            "qualitative": self.qualitative.to_dict(),
         }
         return me
+
     @classmethod
-    def from_dict(cls, values:dict):
+    def from_dict(cls, values: dict):
         me = HybridRisk(values=None)
-        me.qualitative = QualitativeRisk.from_dict(values=values.get('qualitative'))
-        me.quantitative = QuantitativeRisk.from_dict(values=values.get('quantitative'))
+        me.qualitative = QualitativeRisk.from_dict(values=values.get("qualitative"))
+        me.quantitative = QuantitativeRisk.from_dict(values=values.get("quantitative"))
         return me
 
     def get(self):
         return self.risk.copy()
-    
+
     def __hash__(self):
         return hash((self.qualitative, self.quantitative))
-    
+
     def __eq__(self, value):
         return self.__hash__() == value.__hash__()
